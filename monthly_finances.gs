@@ -1,7 +1,7 @@
 var activesheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+var folders = DriveApp.getFoldersByName("Monthly_Statements");
 
 function cleanMonthlyStatements() {
-  folders = DriveApp.getFoldersByName("Monthly_Statements");
   while (folders.hasNext()) {
     var folder = folders.next();
     files = folder.getFiles();
@@ -13,13 +13,12 @@ function cleanMonthlyStatements() {
 }
 
 function ingestCleanStatements() {
-  folders = DriveApp.getFoldersByName("Monthly_Statements");
   while (folders.hasNext()) {
     var folder = folders.next();
     files = folder.getFiles();
     while (files.hasNext()) {
       var file = files.next();
-      updateFileName(file);
+      ingestStatements(file);
     }
   }
 }
@@ -54,9 +53,10 @@ function cleanStatements(file) {
     }
     sheet.deleteRow(1);
     var type = "alaska";
+    sheet.setName(type);
     updateFileName(file,type);
-    //Logger.log(activesheet.getName());
   }
+  //becu statement
   else if(values == "Date") {
     Logger.log("date only!"); 
     sheet.insertColumnAfter(3);
@@ -65,7 +65,6 @@ function cleanStatements(file) {
     for (i = 2; i <= range.getHeight(); i++) { 
       var newRange = sheet.getRange(i,4);
       var letter = String.fromCharCode(65 + width - 1);
-      //var equation = "jacob";
       var equation = '=E' + i + '+F' + i;
       
       newRange.setValue(equation);
@@ -80,13 +79,9 @@ function cleanStatements(file) {
     }
     sheet.deleteRow(1);
     var type = "becu";
+    sheet.setName(type);
     updateFileName(file,type);
   }
-  //
-  //var range = sheet.getDataRange();
-  //
-  
-  //Logger.log(values);
 }
 
 function updateFileName(file,type) {
