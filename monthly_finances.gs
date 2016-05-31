@@ -1,17 +1,37 @@
-function openMonthlyStatements() {
+var activesheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+function cleanMonthlyStatements() {
   folders = DriveApp.getFoldersByName("Monthly_Statements");
   while (folders.hasNext()) {
     var folder = folders.next();
     files = folder.getFiles();
     while (files.hasNext()) {
       var file = files.next();
-      extractStatement(file);
+      cleanStatements(file);
     }
   }
 }
 
-function extractStatement(file) {
-  var activesheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+function ingestCleanStatements() {
+  folders = DriveApp.getFoldersByName("Monthly_Statements");
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    files = folder.getFiles();
+    while (files.hasNext()) {
+      var file = files.next();
+      updateFileName(file);
+    }
+  }
+}
+
+function ingestStatements(file) {
+  var ss = SpreadsheetApp.open(file);
+  Logger.log(activesheet.getName());
+  Logger.log(ss.getName());
+}
+
+function cleanStatements(file) {
+  
   var ss = SpreadsheetApp.open(file);
   var sheet = ss.getSheets()[0];
   var range = sheet.getRange(1,1);
@@ -33,6 +53,8 @@ function extractStatement(file) {
       newRange2.setValue(equation2);
     }
     sheet.deleteRow(1);
+    var type = "alaska";
+    updateFileName(file,type);
     //Logger.log(activesheet.getName());
   }
   else if(values == "Date") {
@@ -57,10 +79,27 @@ function extractStatement(file) {
       
     }
     sheet.deleteRow(1);
+    var type = "becu";
+    updateFileName(file,type);
   }
   //
   //var range = sheet.getDataRange();
   //
   
   //Logger.log(values);
+}
+
+function updateFileName(file,type) {
+  var ss = SpreadsheetApp.open(file);
+  var sheet = ss.getSheets()[0];
+  var labelDate = sheet.getRange(1,1).getValues();
+  labelDate = new Date(labelDate);
+  Logger.log(labelDate);
+  labelDate = ((labelDate.getMonth())+1) + "-" + labelDate.getDate() + "-" + labelDate.getFullYear();
+  if(type == "alaska") {
+    var sheetName = "alaska_cc_" + labelDate + ".csv";
+  } else if(type == "becu") {
+    var sheetName = "becu_checking_" + labelDate + ".csv";
+  }
+  file.setName(sheetName);
 }
