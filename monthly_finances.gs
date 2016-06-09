@@ -57,10 +57,10 @@ function ingestStatements(file) {
           var dd = new Date(destDateRange.getValues()[i]).toDateString();
           //Logger.log(dd, sd);
           
-          if(dd == sd && destinationSheet.getRange(i+3,2,1,dwidth-2).getValues().toString() == sheet.getRange(j+1,2,1,width-1).getValues().toString()) {
+          if(dd == sd && destinationSheet.getRange(i+3,3,1,dwidth-3).getValues().toString() == sheet.getRange(j+1,3,1,width-2).getValues().toString()) {
             Logger.log("exact match found and deleted");
-            Logger.log(destinationSheet.getRange(i+3,2,1,dwidth-2).getValues());
-            Logger.log(sheet.getRange(j+1,2,1,width-1).getValues());
+            Logger.log(destinationSheet.getRange(i+3,3,1,dwidth-3).getValues());
+            Logger.log(sheet.getRange(j+1,3,1,width-2).getValues());
             sheet.deleteRow(j+1);
           }
         }
@@ -83,8 +83,8 @@ function ingestStatements(file) {
       Logger.log(mvdheight);
       var destCopy = mvdestinationSheet.getRange(mvdheight+1,1,mvheight,mvwidth);
       Logger.log(mvrange.getValues());
-      destCopy.setValues(mvrange.getValues());
-      mvrange.clearContent();
+      //destCopy.setValues(mvrange.getValues());
+      //mvrange.clearContent();
     }
   }
   /*
@@ -111,20 +111,9 @@ function cleanStatements(file) {
   var range = sheet.getRange(1,1);
   var values = range.getValues();
   
-  /*var activeRange = sheet.getActiveRange();
-  // iterate through all cells in the selected range
-  for (var cellRow = 1; cellRow <= activeRange.getHeight(); cellRow++) {
-    for (var cellColumn = 1; cellColumn <= activeRange.getWidth(); cellColumn++) {
-      cell = activeRange.getCell(cellRow, cellColumn);
-      cellValue = cell.getValue();
-      cell.setValue(String(cellValue).replace(/\s+/g,'').trim());
-      Logger.log("string replaced!");
-    }
-  }*/
-  
   //credit card statement
   if(values == "Posted Date") {
-    sheet.deleteColumn(2);
+    sheet.insertColumnAfter(1);
     var range = sheet.getDataRange();
     var width = range.getWidth();
     for (i = 2; i <= range.getHeight(); i++) { 
@@ -138,14 +127,18 @@ function cleanStatements(file) {
       var equation2 = '=IF(' + letter + i + '>0,' + letter + i + ',"")';
       newRange2.setValue(equation2);
       
-      var newValue = sheet.getRange(i,3).getValue().toString().replace(/\s+/g,' ').trim();
+      var newRange3 = sheet.getRange(i,2);
+      var equation3 = '=MONTH(A' + i + ')';
+      newRange3.setValue(equation3);
+      
+      var newValue = sheet.getRange(i,5).getValue().toString().replace(/\s+/g,' ').trim();
       Logger.log(newValue);
-      sheet.getRange(i,3).setValue(newValue);
+      sheet.getRange(i,5).setValue(newValue);
       Logger.log(newValue);
       
-      var newValue = sheet.getRange(i,2).getValue().toString().replace(/\s+/g,' ').trim();
+      var newValue = sheet.getRange(i,4).getValue().toString().replace(/\s+/g,' ').trim();
       Logger.log(newValue);
-      sheet.getRange(i,2).setValue(newValue);
+      sheet.getRange(i,4).setValue(newValue);
       Logger.log(newValue);
     }
     sheet.deleteRow(1);
@@ -155,23 +148,27 @@ function cleanStatements(file) {
   }
   //becu statement
   else if(values == "Date") {
-    Logger.log("date only!"); 
+    Logger.log("date only!");
     sheet.insertColumnAfter(3);
+    sheet.insertColumnAfter(1);
     var range = sheet.getDataRange();
     
     for (i = 2; i <= range.getHeight(); i++) { 
-      var newRange = sheet.getRange(i,4);
+      var newRange = sheet.getRange(i,5);
       var letter = String.fromCharCode(65 + width - 1);
-      var equation = '=E' + i + '+F' + i;
-      
+      var equation = '=F' + i + '+G' + i;
       newRange.setValue(equation);
       
-      var newValue = sheet.getRange(i,3).getValue().toString().replace("POS Withdrawal - ", "");
+      var newRange3 = sheet.getRange(i,2);
+      var equation3 = '=MONTH(A' + i + ')';
+      newRange3.setValue(equation3);
+      
+      var newValue = sheet.getRange(i,4).getValue().toString().replace("POS Withdrawal - ", "");
       newValue = newValue.replace(/ - Card Ending In ([0-9])\w+/g,"");
       newValue = newValue.replace("External Withdrawal - ","");
       newValue = newValue.replace(/\s+/g,' ').trim();
       Logger.log(newValue);
-      sheet.getRange(i,3).setValue(newValue);
+      sheet.getRange(i,4).setValue(newValue);
       Logger.log(newValue);
       
     }
