@@ -1,6 +1,8 @@
+//activesheet is the current spreadhseet (in this case it's the 2016 Joint Finances)
 var activesheet = SpreadsheetApp.getActiveSpreadsheet();
 var folders = DriveApp.getFoldersByName("Monthly_Statements");
 
+//for every file in the Monthly_Statements folder, run the cleanStatements function
 function cleanMonthlyStatements() {
   while (folders.hasNext()) {
     var folder = folders.next();
@@ -12,6 +14,7 @@ function cleanMonthlyStatements() {
   }
 }
 
+//for each file that has been cleaned, ingest the data into the 2016 Joint Finances file
 function ingestCleanStatements() {
   while (folders.hasNext()) {
     var folder = folders.next();
@@ -30,38 +33,49 @@ function ingestStatements(file) {
   sheetNames.forEach(moveData);
   
   function deleteDupes(item, index) {
+    //if the name of the sheet matches the name of the relevant file
     if(ss.getSheetByName(item)) {
       Logger.log(ss.getName());
+      //select the specific named sheet
       var destinationSheet = activesheet.getSheetByName(item);
       var dheight = destinationSheet.getDataRange().getHeight();
       var dwidth = destinationSheet.getDataRange().getWidth();
+      //ss is the current workbook with data to be copied into 2016 Joint Finances
       var sheet = ss.getSheetByName(item);
       var range = sheet.getDataRange();
       
       Logger.log(range.getValues());
       var width = range.getWidth();
-      var dateCheckRange = sheet.getRange(1,1,range.getHeight(), 1).getValues();
-      var destDateRange = destinationSheet.getRange(3,1,dheight,1);
+      
+      //the current sheet's dates
+      var dateCheckRange = sheet.getRange(1,1,range.getHeight(), 1);
+      // the destination sheet's dates
+      var destDateRange = destinationSheet.getRange(1,1,dheight,1);
       //Logger.log(destDateRange.getValues());
       
-      //Logger.log(dateCheckRange); (row, column, numRows, numColumns)
-      //Logger.log("break");
-      //Logger.log(destDateRange.getValues());
+      //Logger.log(dateCheckRange); 
+      //(row, column, numRows, numColumns);
       
-      for (var j = 0; j <  dateCheckRange.length; j++) {
-        var sd = new Date(dateCheckRange[j]).toDateString();
-        //Logger.log(dateCheckRange.length)
+      //for each date value in the current sheet's date column
+      for (var j = 1; j <= dateCheckRange.getHeight(); j++) {
+        Logger.log("j:" + j);
+        //sd is the date string for comparision
+        var sd = new Date(dateCheckRange.getValues()[j]).toDateString();
         
-        for (var i = 1; i <= destDateRange.getHeight(); i++) { 
+        //for each date value in the destination sheet's date column, starting with the third row (after header rows)
+        for (var i = 1; i <= (destDateRange.getHeight()); i++) { 
+          //Logger.log("i:" + i);
           //Logger.log(destDateRange.getValues()[i]);
+          //dd is the date string for comparision
           var dd = new Date(destDateRange.getValues()[i]).toDateString();
           //Logger.log(dd, sd);
           
-          if(dd == sd && destinationSheet.getRange(i+3,3,1,dwidth-3).getValues().toString() == sheet.getRange(j+1,3,1,width-2).getValues().toString()) {
-            Logger.log("exact match found and deleted");
-            Logger.log(destinationSheet.getRange(i+3,3,1,dwidth-3).getValues());
-            Logger.log(sheet.getRange(j+1,3,1,width-2).getValues());
-            sheet.deleteRow(j+1);
+          //the string dates match AND the values of the desination sheet starting in the Number/Reference Column going through the final column before category
+          if(dd == sd) {// && destinationSheet.getRange(i,3,1,dwidth-5).getValues().toString() == sheet.getRange(j,3,1,width-4).getValues().toString()) {
+            Logger.log("exact match found" + dd + " || " + sd);// and deleted");
+            Logger.log(destinationSheet.getRange(i,1,1,dwidth-3).getValues());
+            Logger.log(sheet.getRange(j,1,1,width-1).getValues());
+            //sheet.deleteRow(j);
           }
         }
       }
@@ -129,7 +143,7 @@ function cleanStatements(file) {
       
       var newRange3 = sheet.getRange(i,2);
       var equation3 = '=MONTH(A' + i + ')';
-      newRange3.setValue(equation3);
+      newRange3.setValue(equation3).setNumberFormat("0");
       
       var newValue = sheet.getRange(i,5).getValue().toString().replace(/\s+/g,' ').trim();
       Logger.log(newValue);
@@ -141,6 +155,7 @@ function cleanStatements(file) {
       sheet.getRange(i,4).setValue(newValue);
       Logger.log(newValue);
     }
+    range.sort({column: 1, ascending: false});
     sheet.deleteRow(1);
     var type = "alaska";
     sheet.setName(type);
@@ -161,7 +176,7 @@ function cleanStatements(file) {
       
       var newRange3 = sheet.getRange(i,2);
       var equation3 = '=MONTH(A' + i + ')';
-      newRange3.setValue(equation3);
+      newRange3.setValue(equation3).setNumberFormat("0");
       
       var newValue = sheet.getRange(i,4).getValue().toString().replace("POS Withdrawal - ", "");
       newValue = newValue.replace(/ - Card Ending In ([0-9])\w+/g,"");
@@ -172,6 +187,7 @@ function cleanStatements(file) {
       Logger.log(newValue);
       
     }
+    range.sort({column: 1, ascending: false});
     sheet.deleteRow(1);
     var type = "becu";
     sheet.setName(type);
